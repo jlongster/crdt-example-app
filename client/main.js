@@ -44,7 +44,7 @@ let _offlineTimer = null;
 function detectOffline() {
   _offlineTimer = setInterval(async () => {
     try {
-      await fetch('https://crdt.jlongster.com/ping');
+      await fetch('https://crdt.jlongster.com/server/ping');
       setOffline(false);
     } catch (e) {
       setOffline(true);
@@ -100,9 +100,16 @@ function render() {
       </div>
 
       <div class="flex flex-col items-center relative border-t">
-        <button id="btn-sync" class="m-4 mr-6 ${offline ? 'bg-red-600' : 'bg-blue-600'} text-white rounded p-2">
-          Sync ${offline ? '(offline)' : ''}
-        </button>
+        <div class="relative">
+          <div id="up-to-date" class="absolute top-0 bottom-0 flex items-center" style="right: -100%; opacity: 0">
+            <div class="flex flex-row items-center text-green-700 text-sm">
+              <img src="check.svg" class="mr-1" style="width: 13px; height: 13px;" /> Up to date
+            </div>
+          </div>
+          <button id="btn-sync" class="m-4 mr-6 ${offline ? 'bg-red-600' : 'bg-blue-600'} text-white rounded p-2">
+            Sync ${offline ? '(offline)' : ''}
+          </button>
+        </div>
 
         <div class="absolute right-0 top-0 bottom-0 flex items-center pr-4 text-sm">
           <button id="btn-offline-simulate" class="text-sm hover:bg-gray-300 px-2 py-1 rounded ${offline ? 'text-blue-700' : 'text-red-700'}">${offline ? 'Go online' : 'Simulate offline'}</button>
@@ -206,13 +213,7 @@ function addEventHandlers() {
   });
 
   qs('#btn-sync').addEventListener('click', async e => {
-    let oldLabel = e.target.textContent;
-    e.target.className =
-      e.target.className.replace(/bg-[^ ]*/, '') + ' bg-blue-300';
     sync();
-
-    await wait(5000);
-    // e.target.textContent = oldLabel;
   });
 
   qs('#btn-offline-simulate').addEventListener('click', () => {
@@ -311,6 +312,8 @@ function addEventHandlers() {
 
 render();
 
+let _syncMessageTimer = null;
+
 onSync(() => {
   let el = document.activeElement;
   let focusedQS = el.id
@@ -329,6 +332,16 @@ onSync(() => {
       elements[0].focus();
     }
   }
+
+  let message = qs('#up-to-date');
+  message.style.transition = 'none'
+  message.style.opacity = 1;
+
+  clearTimeout(_syncMessageTimer);
+  _syncMessageTimer = setTimeout(() => {
+    message.style.transition = 'opacity .7s'
+    message.style.opacity = 0;
+  }, 1000);
 });
 
 sync().then(() => {

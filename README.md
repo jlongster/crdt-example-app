@@ -1,6 +1,8 @@
 
 This is a demo app used for my dotJS 2019 talk "CRDTs for Mortals".
 
+View it live at https://crdt.jlongster.com
+
 It contains a full implementation of [hybrid logical clocks](https://cse.buffalo.edu/tech-reports/2014-04.pdf) to generate timestamp for causal ordering of messages. Using these timestamps, CRDTs can be easily used to change local data that also syncs to multiple devices. This also contains an implementation of a merkle tree to check consistency of the data to make sure all clients are in sync.
 
 It provides a server to store and retrieve messages, so that clients don't have to connect peer-to-peer.

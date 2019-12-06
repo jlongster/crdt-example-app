@@ -18,7 +18,7 @@ See talk & slides which will be posted soon.
 
 Links:
 
-Actual: https://actualbudget.com/
-Hybrid logical clocks: https://cse.buffalo.edu/tech-reports/2014-04.pdf
-CRDTs: https://bit.ly/2DMk0AD
-Live app: https://crdt.jlongster.com/
+* Actual: https://actualbudget.com/
+* Hybrid logical clocks: https://cse.buffalo.edu/tech-reports/2014-04.pdf
+* CRDTs: https://bit.ly/2DMk0AD
+* Live app: https://crdt.jlongster.com/

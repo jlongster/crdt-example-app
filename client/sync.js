@@ -8,7 +8,7 @@ function setSyncingEnabled(flag) {
 }
 
 async function post(data) {
-  let res = await fetch('http://localhost:8000/sync', {
+  let res = await fetch('https://crdt.jlongster.com/server/sync', {
     method: 'POST',
     body: JSON.stringify(data),
     headers: {

@@ -57,7 +57,7 @@ let _offlineTimer = null;
 function detectOffline() {
   _offlineTimer = setInterval(async () => {
     try {
-      await fetch('http://localhost:8000/ping');
+      await fetch('https://crdt.jlongster.com/server/ping');
       setOffline(false);
     } catch (e) {
       setOffline(true);

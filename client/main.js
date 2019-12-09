@@ -73,6 +73,42 @@ function setOffline(flag) {
   }
 }
 
+let _scrollTop = 0;
+function saveScroll() {
+  let scroller = qs('#scroller');
+  if (scroller) {
+    _scrollTop = scroller.scrollTop;
+  }
+}
+
+function restoreScroll() {
+  let scroller = qs('#scroller');
+  if (scroller) {
+    scroller.scrollTop = _scrollTop;
+  }
+}
+
+let _activeElement = null;
+function saveActiveElement() {
+  let el = document.activeElement;
+  _activeElement = el.id
+    ? '#' + el.id
+    : el.className
+    ? '.' + el.className.replace(/ ?hover\:[^ ]*/g, '').replace(/ /g, '.')
+    : null;
+}
+
+function restoreActiveElement() {
+  if (_activeElement) {
+    let elements = qsa(_activeElement);
+    // Cheap focus management: only re-focus if there's a single
+    // element, otherwise we don't know which one was focused
+    if (elements.length === 1) {
+      elements[0].focus();
+    }
+  }
+}
+
 function renderTodoTypes({ className = '', showBlank } = {}) {
   return `
     <select class="${className} mr-2 bg-transparent shadow border border-gray-300">
@@ -84,9 +120,32 @@ function renderTodoTypes({ className = '', showBlank } = {}) {
   `;
 }
 
+function renderTodos({ root, todos, isDeleted = false }) {
+  todos.forEach(todo => {
+    append(
+      // prettier-ignore
+      `
+        <div class="todo-item bg-gray-200 p-4 mb-4 rounded flex cursor-pointer" data-id="${todo.id}">
+          <div class="flex-grow flex items-center">
+            <div class="${isDeleted ? 'line-through' : ''}">${sanitize(todo.name)}</div>
+            <div class="text-sm rounded ${todo.type ? getColor(todo.type.color) : ''} px-2 ml-3">
+              ${todo.type ? sanitize(todo.type.name) : ''}
+            </div>
+          </div>
+          <button class="btn-delete hover:bg-gray-400 px-2 rounded ${isDeleted ? 'hidden' : ''}" data-id="${todo.id}">X</button>
+       </div>
+      `,
+      root
+    );
+  });
+}
+
 function render() {
   document.documentElement.style.height = '100%';
   document.body.style.height = '100%';
+
+  saveScroll();
+  saveActiveElement();
 
   let root = qs('#root');
   root.style.height = '100%';
@@ -99,7 +158,7 @@ function render() {
   append(`
     <div class="flex flex-col h-full">
 
-      <div class="flex flex-col flex-grow items-center pt-8 overflow-auto px-4 relative">
+      <div id="scroller" class="flex flex-col flex-grow items-center pt-8 overflow-auto px-4 relative">
         <div style="width: 100%; max-width: 600px">
           <form id="add-form" class="flex">
             <input placeholder="Add todo..." class="shadow border border-gray-300 mr-2 flex-grow p-2 rounded" />
@@ -109,9 +168,13 @@ function render() {
 
           <div class="mt-8" id="todos">
           </div>
+
+          <h2 class="text-lg mt-24">Deleted todos</h2>
+          <div class="mt-8" id="deleted-todos">
+          </div>
         </div>
 
-        <div id="up-to-date" class="absolute bottom-0 flex items-center mb-2 rounded bg-gray-800 px-4 py-3" style="opacity: 0">
+        <div id="up-to-date" class="fixed flex items-center mb-2 rounded bg-gray-800 px-4 py-3" style="opacity: 0; bottom: 80px">
           <div class="flex flex-row items-center text-green-200 text-sm">
             <img src="check.svg" class="mr-1" style="width: 13px; height: 13px;" /> Up to date
           </div>
@@ -137,22 +200,11 @@ function render() {
     </div>
   `);
 
-  getTodos().forEach(todo => {
-    append(
-      // prettier-ignore
-      `
-        <div class="todo-item bg-gray-200 p-4 mb-4 rounded flex cursor-pointer" data-id="${todo.id}">
-          <div class="flex-grow flex items-center">
-            ${sanitize(todo.name)}
-            <div class="text-sm rounded ${todo.type ? getColor(todo.type.color) : ''} px-2 ml-3">
-              ${todo.type ? sanitize(todo.type.name) : ''}
-            </div>
-          </div>
-          <button class="btn-delete" data-id="${todo.id}">X</button>
-       </div>
-      `,
-      qs('#todos')
-    );
+  renderTodos({ root: qs('#todos'), todos: getTodos() });
+  renderTodos({
+    root: qs('#deleted-todos'),
+    todos: getDeletedTodos(),
+    isDeleted: true
   });
 
   if (editingTodo) {
@@ -161,7 +213,9 @@ function render() {
         <div class="bg-white p-8" style="width: 500px">
           <h2 class="text-lg font-bold mb-4">Edit todo</h2>
           <div class="flex">
-            <input value="${sanitize(editingTodo.name)}" class="shadow border border-gray-300 mr-2 flex-grow p-2 rounded" />
+            <input value="${sanitize(
+              editingTodo.name
+            )}" class="shadow border border-gray-300 mr-2 flex-grow p-2 rounded" />
             <button id="btn-edit-save" class="rounded p-2 bg-blue-600 text-white mr-2">Save</button>
             <button id="btn-edit-cancel" class="rounded p-2 bg-gray-200">Cancel</button>
           </div>
@@ -208,12 +262,8 @@ function render() {
   }
 
   addEventHandlers();
-}
-
-function wait(n) {
-  return new Promise(resolve => {
-    setTimeout(resolve, n);
-  });
+  restoreScroll();
+  restoreActiveElement();
 }
 
 function addEventHandlers() {
@@ -225,6 +275,11 @@ function addEventHandlers() {
 
     nameNode.value = '';
     typeNode.selectedIndex = 0;
+
+    if (name === '') {
+      alert("Todo can't be blank. C'mon!");
+      return;
+    }
 
     insert('todos', { name, type, order: getNumTodos() });
   });
@@ -255,6 +310,13 @@ function addEventHandlers() {
   for (let todoNode of qsa('.todo-item')) {
     todoNode.addEventListener('click', e => {
       let todo = getTodos().find(t => t.id === todoNode.dataset.id);
+      if (!todo) {
+        // Search the deleted todos (this could be large, so only
+        // searching the existing todos first which is the common case
+        // is faster
+        todo = getAllTodos().find(t => t.id === todoNode.dataset.id);
+      }
+
       uiState.editingTodo = todo;
       render();
     });
@@ -262,6 +324,7 @@ function addEventHandlers() {
 
   for (let btn of qsa('.btn-delete')) {
     btn.addEventListener('click', e => {
+      e.stopPropagation();
       delete_('todos', e.target.dataset.id);
     });
   }
@@ -332,23 +395,7 @@ render();
 let _syncMessageTimer = null;
 
 onSync(() => {
-  let el = document.activeElement;
-  let focusedQS = el.id
-    ? '#' + el.id
-    : el.className
-    ? '.' + el.className.replace(/ /g, '.')
-    : null;
-
   render();
-
-  if (focusedQS) {
-    let elements = qsa(focusedQS);
-    // Cheap focus management: only re-focus if there's a single
-    // element, otherwise we don't know which one was focused
-    if (elements.length === 1) {
-      elements[0].focus();
-    }
-  }
 
   let message = qs('#up-to-date');
   message.style.transition = 'none';

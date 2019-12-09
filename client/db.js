@@ -52,13 +52,11 @@ function delete_(table, id) {
   ]);
 }
 
-function getTodos() {
-  let todos = _data.todos
-    .filter(todo => todo.tombstone !== 1)
-    .map(todo => ({
-      ...todo,
-      type: todo.type ? getTodoType(todo.type) : null
-    }));
+function _resolveTodos(todos) {
+  todos = todos.map(todo => ({
+    ...todo,
+    type: todo.type ? getTodoType(todo.type) : null
+  }));
 
   todos.sort((t1, t2) => {
     if (t1.order < t2.order) {
@@ -70,6 +68,18 @@ function getTodos() {
   });
 
   return todos;
+}
+
+function getTodos() {
+  return _resolveTodos(_data.todos.filter(todo => todo.tombstone !== 1));
+}
+
+function getDeletedTodos() {
+  return _resolveTodos(_data.todos.filter(todo => todo.tombstone === 1));
+}
+
+function getAllTodos() {
+  return _resolveTodos(_data.todos);
 }
 
 function getTodoType(id) {

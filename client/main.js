@@ -56,17 +56,21 @@ let uiState = {
 let _syncTimer = null;
 function backgroundSync() {
   _syncTimer = setInterval(async () => {
-    try {
-      await sync();
-      setOffline(false);
-    } catch (e) {
-      if (e.message === 'network-failure') {
-        setOffline(true);
-      } else {
-        throw e;
+    // Don't sync if an input is focused, otherwise if changes come in
+    // we will clear the input (since everything is rerendered :))
+    if (document.activeElement === document.body) {
+      try {
+        await sync();
+        setOffline(false);
+      } catch (e) {
+        if (e.message === 'network-failure') {
+          setOffline(true);
+        } else {
+          throw e;
+        }
       }
     }
-  }, 1000);
+  }, 4000);
 }
 
 function setOffline(flag) {
@@ -300,6 +304,7 @@ function addEventHandlers() {
 
   qs('#btn-offline-simulate').addEventListener('click', () => {
     if (uiState.offline) {
+      setOffline(false);
       backgroundSync();
     } else {
       setOffline(true);

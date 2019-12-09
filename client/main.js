@@ -219,6 +219,12 @@ function render() {
             <button id="btn-edit-save" class="rounded p-2 bg-blue-600 text-white mr-2">Save</button>
             <button id="btn-edit-cancel" class="rounded p-2 bg-gray-200">Cancel</button>
           </div>
+
+          ${
+            editingTodo.tombstone === 1
+              ? '<button id="btn-edit-undelete" class="pt-4 text-sm">Undelete</button>'
+              : ''
+          }
         </div>
       <div>
     `);
@@ -338,6 +344,17 @@ function addEventHandlers() {
       uiState.editingTodo = null;
       render();
     });
+
+    if (qs('#btn-edit-undelete')) {
+      qs('#btn-edit-undelete').addEventListener('click', e => {
+        let input = e.target.parentNode.querySelector('input');
+        let value = input.value;
+
+        update('todos', { id: uiState.editingTodo.id, tombstone: 0 });
+        uiState.editingTodo = null;
+        render();
+      });
+    }
   } else if (uiState.isAddingType) {
     qs('#btn-edit-save').addEventListener('click', e => {
       let input = e.target.parentNode.querySelector('input');

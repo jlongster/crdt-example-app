@@ -1,0 +1,2 @@
+#!/bin/sh
+exec node server/index.js 2>&1

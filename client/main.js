@@ -53,14 +53,18 @@ let uiState = {
   isDeletingType: false
 };
 
-let _offlineTimer = null;
-function detectOffline() {
-  _offlineTimer = setInterval(async () => {
+let _syncTimer = null;
+function backgroundSync() {
+  _syncTimer = setInterval(async () => {
     try {
-      await fetch('https://crdt.jlongster.com/server/ping');
+      await sync();
       setOffline(false);
     } catch (e) {
-      setOffline(true);
+      if (e.message === 'network-failure') {
+        setOffline(true);
+      } else {
+        throw e;
+      }
     }
   }, 1000);
 }
@@ -296,10 +300,10 @@ function addEventHandlers() {
 
   qs('#btn-offline-simulate').addEventListener('click', () => {
     if (uiState.offline) {
-      detectOffline();
+      backgroundSync();
     } else {
       setOffline(true);
-      clearInterval(_offlineTimer);
+      clearInterval(_syncTimer);
     }
   });
 
@@ -411,7 +415,7 @@ render();
 
 let _syncMessageTimer = null;
 
-onSync(() => {
+onSync(hasChanged => {
   render();
 
   let message = qs('#up-to-date');
@@ -432,4 +436,4 @@ sync().then(() => {
     insertTodoType({ name: 'Work', color: 'blue' });
   }
 });
-detectOffline();
+backgroundSync();

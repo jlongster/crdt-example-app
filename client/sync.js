@@ -119,14 +119,21 @@ async function sync(initialMessages = [], since = null) {
     messages = _messages.filter(msg => msg.timestamp >= timestamp);
   }
 
-  let result = await post({
-    group_id: 'my-group',
-    client_id: getClock().timestamp.node(),
-    messages,
-    merkle: getClock().merkle
-  });
+  let result;
+  try {
+    result = await post({
+      group_id: 'my-group',
+      client_id: getClock().timestamp.node(),
+      messages,
+      merkle: getClock().merkle
+    });
+  } catch (e) {
+    throw new Error('network-failure');
+  }
 
-  receiveMessages(result.messages);
+  if (result.messages.length > 0) {
+    receiveMessages(result.messages);
+  }
 
   let diffTime = merkle.diff(result.merkle, getClock().merkle);
 

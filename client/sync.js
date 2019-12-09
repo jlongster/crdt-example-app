@@ -129,6 +129,7 @@ async function sync(initialMessages = [], since = null) {
   receiveMessages(result.messages);
 
   let diffTime = merkle.diff(result.merkle, getClock().merkle);
+
   if (diffTime) {
     if (since && since === diffTime) {
       throw new Error(

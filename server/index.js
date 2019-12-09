@@ -46,13 +46,13 @@ function deserializeValue(value) {
   throw new Error('Invalid type key for value: ' + value);
 }
 
-function getClock(group_id) {
-  let rows = queryAll('SELECT * FROM messages_clocks WHERE group_id = ?', [
+function getMerkle(group_id) {
+  let rows = queryAll('SELECT * FROM messages_merkles WHERE group_id = ?', [
     group_id
   ]);
 
   if (rows.length > 0) {
-    return JSON.parse(rows[0].clock);
+    return JSON.parse(rows[0].merkle);
   } else {
     // No merkle trie exists yet (first sync of the app), so create a
     // default one.
@@ -60,19 +60,8 @@ function getClock(group_id) {
   }
 }
 
-function setClock(group_id, clock, trie) {
-  queryRun(
-    'INSERT OR REPLACE INTO messages_clocks (group_id, clock) VALUES (?, ?)',
-    [groupId, JSON.stringify({ clock, trie })]
-  );
-}
-
 function addMessages(groupId, messages) {
-  let { clock, trie } = getClock(groupId);
-
-  messages.forEach(msg => {
-    Timestamp.recv(clock, msg);
-  });
+  let trie = getMerkle(groupId);
 
   queryRun('BEGIN');
 
@@ -92,7 +81,10 @@ function addMessages(groupId, messages) {
       }
     }
 
-    setClock(groupId, clock, trie);
+    queryRun(
+      'INSERT OR REPLACE INTO messages_merkles (group_id, merkle) VALUES (?, ?)',
+      [groupId, JSON.stringify(trie)]
+    );
     queryRun('COMMIT');
   } catch (e) {
     queryRun('ROLLBACK');

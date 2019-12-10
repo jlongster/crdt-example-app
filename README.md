@@ -9,7 +9,7 @@ It contains a full implementation of [hybrid logical clocks](https://cse.buffalo
 
 It provides a server to store and retrieve messages, so that clients don't have to connect peer-to-peer.
 
-The entire implementation is tiny, but provides a robusy mechanism for writing distributed apps:
+The entire implementation is tiny, but provides a robust mechanism for writing distributed apps:
 
 * Server: 132 lines of JS
 * Client: 639 lines of JS

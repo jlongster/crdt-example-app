@@ -1,5 +1,5 @@
 
-This is a demo app used for my dotJS 2019 talk "CRDTs for Mortals".
+This is a demo app used for my dotJS 2019 talk ["CRDTs for Mortals"](https://www.youtube.com/watch?v=DEcwa68f-jY)
 
 Slides here: https://jlongster.com/s/dotjs-crdt-slides.pdf
 

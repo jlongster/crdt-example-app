@@ -4,11 +4,15 @@ let bodyParser = require('body-parser');
 let cors = require('cors');
 let { Timestamp } = require('../shared/timestamp');
 let merkle = require('../shared/merkle');
+let path = require('path');
+let fs = require('fs');
 
 let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '20mb' }));
+app.use(express.static(path.resolve('./client')));
+app.use('/shared', express.static(path.resolve('./shared')));
 
 function queryAll(sql, params = []) {
   let stmt = db.prepare(sql);
@@ -19,7 +23,14 @@ function queryRun(sql, params = []) {
   let stmt = db.prepare(sql);
   return stmt.run(...params);
 }
-
+let initSql = fs.readFileSync(path.resolve('./server/init.sql'), 'utf-8').split(';');
+initSql.forEach(sql => {
+  console.log(sql);
+  try{
+    let result = queryRun(`${sql};`);
+    console.log(result);  
+  }catch(e){console.log('already created', e)}
+});
 function serializeValue(value) {
   if (value === null) {
     return '0:';
@@ -128,4 +139,6 @@ app.get('/ping', (req, res) => {
   res.send('ok');
 });
 
-app.listen(8006);
+app.listen(8006, ()=>{
+  console.log(`http://localhost:8006`)
+});

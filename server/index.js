@@ -11,7 +11,6 @@ let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '20mb' }));
-app.use(express.static(path.resolve('./client')));
 
 function queryAll(sql, params = []) {
   let stmt = db.prepare(sql);

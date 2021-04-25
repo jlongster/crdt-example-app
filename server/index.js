@@ -4,7 +4,6 @@ let bodyParser = require('body-parser');
 let cors = require('cors');
 let { Timestamp } = require('../shared/timestamp');
 let merkle = require('../shared/merkle');
-let path = require('path');
 
 let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();

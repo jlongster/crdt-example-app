@@ -11,6 +11,8 @@ let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '20mb' }));
+app.use('/', express.static(path.resolve('./client')))
+app.use('/shared', express.static(path.resolve('./shared')))
 
 function queryAll(sql, params = []) {
   let stmt = db.prepare(sql);
@@ -132,4 +134,4 @@ app.get('/ping', (req, res) => {
   res.send('ok');
 });
 
-app.listen(8006);
+app.listen(8006, ()=>console.log(`http://localhost:8006`));

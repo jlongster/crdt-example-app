@@ -4,6 +4,8 @@ let bodyParser = require('body-parser');
 let cors = require('cors');
 let { Timestamp } = require('../shared/timestamp');
 let merkle = require('../shared/merkle');
+let path = require('path');
+let initSql = require('./initdb.js')
 
 let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
@@ -19,6 +21,8 @@ function queryRun(sql, params = []) {
   let stmt = db.prepare(sql);
   return stmt.run(...params);
 }
+
+initSql(path.resolve('./server/init.sql'), queryRun);
 
 function serializeValue(value) {
   if (value === null) {

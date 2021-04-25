@@ -145,6 +145,4 @@ app.get('/ping', (req, res) => {
   res.send('ok');
 });
 
-app.listen(8006, ()=>{
-  console.log(`http://localhost:8006`)
-});
+app.listen(8006);

@@ -9,7 +9,6 @@ let initSql = require('./initdb.js')
 
 let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
-
 app.use(cors());
 app.use(bodyParser.json({ limit: '20mb' }));
 

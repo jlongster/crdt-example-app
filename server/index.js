@@ -5,10 +5,11 @@ let cors = require('cors');
 let { Timestamp } = require('../shared/timestamp');
 let merkle = require('../shared/merkle');
 let path = require('path');
-let fs = require('fs');
+let initSql = require('./initdb.js')
 
 let db = sqlite3(__dirname + '/db.sqlite');
 let app = express();
+
 app.use(cors());
 app.use(bodyParser.json({ limit: '20mb' }));
 
@@ -22,20 +23,7 @@ function queryRun(sql, params = []) {
   return stmt.run(...params);
 }
 
-let initSql = fs.readFileSync(path.resolve('./server/init.sql'), 'utf-8').split(';');
-initSql.forEach(sql => {
-  try{
-    console.log('Initializing the database');
-    let s = sql.trim();
-    if(s.length > 0) queryRun(`${s};`);
-  }catch(e){
-    if(!e.message.indexOf('already exists')){
-      throw e;
-    }else {
-      console.log('Database was already intialized.');
-    }
-  }
-});
+initSql(path.resolve('./server/init.sql'), queryRun);
 
 function serializeValue(value) {
   if (value === null) {
